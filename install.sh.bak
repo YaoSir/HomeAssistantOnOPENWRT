@@ -201,6 +201,78 @@ if [ $? -ne 0 ]; then
 fi
 rm -rf ./cryptography-2.6.1*
 
+#Python module aiohttp_cors
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Install python module: aiohttp_cors...... try $try. \033[0m"
+        pip3 install aiohttp_cors==0.7.0
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[31m ERROR! Install aiohttp_cors failed, exit. \033[0m"
+        exit 0
+    fi
+done
+#Python module sqlalchemy
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Install python module: sqlalchemy...... try $try. \033[0m"
+        pip3 install sqlalchemy==1.3.3
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[31m Install python module sqlalchemy failed, exit. \033[0m"
+        exit 0
+    fi
+done
+#Python module pycryptodome
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Install python module: pycryptodome...... try $try. \033[0m"
+        pip3 install pycryptodome==3.3.1
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[31m Install python module pycryptodome failed, exit. \033[0m"
+        exit 0
+    fi
+done
+#Python module home-assistant-frontend
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Install python module: home-assistant-frontend...... try $try. \033[0m"
+        pip3 install home-assistant-frontend
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[33m Install python module home-assistant-frontend failed, exit. \033[0m"
+        exit 0
+    fi
+done
 #Install Home Assistant
 try=0
 while true
