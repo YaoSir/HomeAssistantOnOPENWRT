@@ -1,55 +1,114 @@
 #!/bin/sh
 
+#Compare the first version and the second version. If the first lower than the second return 0 , or return 1
+CompareVersion() {
+    fversion_1=`echo $1 | awk -F '.' '{print $1}'`
+    fversion_2=`echo $1 | awk -F '.' '{print $2}'`
+    fversion_3=`echo $1 | awk -F '.' '{print $3}'`
+    sversion_1=`echo $2 | awk -F '.' '{print $1}'`
+    sversion_2=`echo $2 | awk -F '.' '{print $2}'`
+    sversion_3=`echo $2 | awk -F '.' '{print $3}'`
+
+
+    if [ $fversion_1 -lt $sversion_1 ]; then
+        return 0
+    elif [ $fversion_1 -gt $sversion_1 ]; then
+        return 1
+    fi
+
+    if [ $fversion_2 -lt $sversion_2 ]; then
+        return 0
+    elif [ $fversion_2 -gt $sversion_2 ]; then
+        return 1
+    fi
+
+    if [ $fversion_3 -lt $sversion_3 ]; then
+        return 0
+    elif [ $fversion_3 -gt $sversion_3 ]; then
+        return 1
+    fi
+
+    return 0
+}
+
 #Get into the installation path /root/
 cd /root/
 currentpath=`pwd`
 if [ "$currentpath" != "/root" ]; then
-    echo "Cannot get into installation path"
+    echo -e "\033[31m ERROR! Cannot get into installation path, exit. \033[0m"
     exit 0
 fi
 
 #Update the opkg package info
 try=0
-opkg update
-if [ $? -ne 0 ]; then
-    echo "opkg update failed, check the network connection."
-    exit 0
-fi
-
-#Install python3.6
-echo "Install python3.6"
-opkg install python3
-if [ $? -ne 0 ]; then
-    echo "Install python3.6 failed, check the network connection."
-    exit 0
-fi
-
-#Download and install latest pip for python3
 while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Download python3 pip installation script, try $try"
-        curl https://bootstrap.pypa.io/get-pip.py > get-pip.py
+        echo -e "\033[33m opkg update...... try $try. \033[0m"
+        opkg update
         if [ $? -ne 0 ]; then
-            rm ./get-pip.py
             continue
         else
             break
         fi
     else
-        echo "Download python3 pip installation script failed, exit."
+        echo -e "\033[31m ERROR! opkg update failed, check the network connection, exit. \033[0m"
         exit 0
     fi
 done
 
-#Install python3 pip
-python3 get-pip.py
-if [ $? -ne 0 ]; then
-    echo "Install python3 pip failed, exit."
-    exit 0
+#Install python3.6
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Installing python3.6...... try $try. \033[0m"
+        opkg install python3
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[31m ERROR! Install python3.6 failed, check the network connection, exit. \033[0m"
+        exit 0
+    fi
+done
+
+
+#Download and install latest pip for python3
+pipreq=0
+command -v pip > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    CompareVersion 19.1.1 `pip --version | awk '{print $2}'`
+    if [ $? -eq 0 ]; then
+    pipreq=1
+    fi
 fi
-rm ./get-pip.py
+
+if [ $pipreq -ne 1 ]; then
+    try=0
+    while true
+    do
+        try=$((try+1))
+        if [ $try -le 5 ]; then
+            echo -e "\033[33m Download and install pip...... try $try. \033[0m"
+            curl https://bootstrap.pypa.io/get-pip.py > get-pip.py && python3 get-pip.py
+            if [ $? -ne 0 ]; then
+                rm ./get-pip.py
+                continue
+            else
+                break
+            fi
+        else
+            echo -e "\033[31m ERROR! Install pip failed,  exit. \033[0m"
+            exit 0
+        fi
+    done
+    rm ./get-pip.py
+fi
 
 #Install gcc
 try=0
@@ -57,66 +116,68 @@ while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Download gcc installation package, try $try"
-        curl http://download.gl-inet.com/releases/packages-3.x/ipq40xx/packages/gcc_4.8.3-1_ipq806x.ipk > gcc_4.8.3-1_ipq806x.ipk
+        echo -e "\033[33m Download and install gcc...... try $try. \033[0m"
+        opkg install gcc
         if [ $? -ne 0 ]; then
-            rm ./gcc_4.8.3-1_ipq806x.ipk
             continue
         else
             break
         fi
     else
-        echo "Download gcc installation package failed, exit."
+        echo -e "\033[31m ERROR! Install gcc failed,  exit. \033[0m"
         exit 0
     fi
 done
 
-#Install gcc package
-opkg install ./gcc_4.8.3-1_ipq806x.ipk
-if [ $? -ne 0 ]; then
-    echo "Install gcc failed, exit."
-    exit 0
-fi
-rm ./gcc_4.8.3-1_ipq806x.ipk
-
 #Install dependent C library
 opkg install python3-dev
 if [ $? -ne 0 ]; then
-    echo "Install python3-dev failed, exit."
+    echo -e "\033[31m ERROR! Install python-dev failed, exit. \033[0m"
     exit 0
 fi
-echo "Install C library......libffi"
+echo -e "\033[32m Install C library......libffi \033[0m"
 mkdir -p /usr/include/ffi && \
-cp ./HomeAssistantInstallation/ffi* /usr/include/ffi && \
+cp ./HomeAssistantOnOPENWRT-master/ffi* /usr/include/ffi && \
 ln -s /usr/lib/libffi.so.6.0.1 /usr/lib/libffi.so
-echo "Install C library......libopenssl"
-cp -r ./HomeAssistantInstallation/openssl /usr/include/python3.6/ && \
+echo -e "\033[32m Install C library......libopenssl \033[0m"
+cp -r ./HomeAssistantOnOPENWRT-master/openssl /usr/include/python3.6/ && \
 ln -s /usr/lib/libcrypto.so.1.0.0 /usr/lib/libcrypto.so && \
 ln -s /usr/lib/libssl.so.1.0.0 /usr/lib/libssl.so
-echo "Install C library......libsodium"
+echo -e "\033[32m Install C library......libsodium \033[0m"
 opkg install libsodium
 if [ $? -ne 0 ]; then
-    echo "Install libsodium failed, exit."
+    echo -e "\033[31m ERROR! Install libsodium failed,  exit. \033[0m"
     exit 0
 fi
-cp ./HomeAssistantInstallation/sodium.h /usr/include/python3.6/ && \
-cp -r ./HomeAssistantInstallation/sodium /usr/include/python3.6/ && \
+cp ./HomeAssistantOnOPENWRT-master/sodium.h /usr/include/python3.6/ && \
+cp -r ./HomeAssistantOnOPENWRT-master/sodium /usr/include/python3.6/ && \
 ln -s /usr/lib/libsodium.so.23.1.0 /usr/lib/libsodium.so
 
 #Install dependent python module
-echo "Install python module......PyNaCl"
-SODIUM_INSTALL=system pip3 install pynacl
-if [ $? -ne 0 ]; then
-    echo "Install PyNaCl failed, exit."
-    exit 0
-fi
-echo "Install python module......cryptography"
 try=0
 while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Download cryptography package, try $try"
+        echo -e "\033[33m Install python module: PyNaCl...... try $try. \033[0m"
+        SODIUM_INSTALL=system pip3 install pynacl
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[31m ERROR! Install PyNacl failed,  exit. \033[0m"
+        exit 0
+    fi
+done
+
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Download python module: cryptography...... try $try. \033[0m"
         curl https://files.pythonhosted.org/packages/07/ca/bc827c5e55918ad223d59d299fff92f3563476c3b00d0a9157d9c0217449/cryptography-2.6.1.tar.gz > cryptography-2.6.1.tar.gz
         if [ $? -ne 0 ]; then
             rm ./cryptography-2.6.1.tar.gz
@@ -125,16 +186,17 @@ do
             break
         fi
     else
-        echo "Download cryptography package failed, exit."
+        echo -e "\033[31m ERROR! Download cryptography failed, exit. \033[0m"
         exit 0
     fi
 done
+echo -e "\033[32m Install python module: cryptography...... \033[0m"
 tar -xzvf cryptography-2.6.1.tar.gz && \
 cd ./cryptography-2.6.1 && \
 LDFLAGS=-pthread python3 setup.py install && \
 cd ../
 if [ $? -ne 0 ]; then
-    echo "Install cryptography failed, exit."
+    echo -e "\033[31m ERROR! Install cryptography failed,  exit. \033[0m"
     exit 0
 fi
 rm -rf ./cryptography-2.6.1*
@@ -145,7 +207,7 @@ while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Install necessary python module......aiohttp_cors, try $try"
+        echo -e "\033[33m Install python module: aiohttp_cors...... try $try. \033[0m"
         pip3 install aiohttp_cors==0.7.0
         if [ $? -ne 0 ]; then
             continue
@@ -153,7 +215,7 @@ do
             break
         fi
     else
-        echo "Install aiohttp_cors failed, exit."
+        echo -e "\033[31m ERROR! Install aiohttp_cors failed, exit. \033[0m"
         exit 0
     fi
 done
@@ -163,7 +225,7 @@ while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Install necessary python module......sqlalchemy, try $try"
+        echo -e "\033[33m Install python module: sqlalchemy...... try $try. \033[0m"
         pip3 install sqlalchemy==1.3.3
         if [ $? -ne 0 ]; then
             continue
@@ -171,7 +233,7 @@ do
             break
         fi
     else
-        echo "Install sqlalchemy failed, exit."
+        echo -e "\033[31m Install python module sqlalchemy failed, exit. \033[0m"
         exit 0
     fi
 done
@@ -181,7 +243,7 @@ while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Install necessary python module......pycryptodome, try $try"
+        echo -e "\033[33m Install python module: pycryptodome...... try $try. \033[0m"
         pip3 install pycryptodome==3.3.1
         if [ $? -ne 0 ]; then
             continue
@@ -189,7 +251,7 @@ do
             break
         fi
     else
-        echo "Install pycryptodome failed, exit."
+        echo -e "\033[31m Install python module pycryptodome failed, exit. \033[0m"
         exit 0
     fi
 done
@@ -199,7 +261,7 @@ while true
 do
     try=$((try+1))
     if [ $try -le 5 ]; then
-        echo "Install necessary python module......home-assistant-frontend, try $try"
+        echo -e "\033[33m Install python module: home-assistant-frontend...... try $try. \033[0m"
         pip3 install home-assistant-frontend
         if [ $? -ne 0 ]; then
             continue
@@ -207,24 +269,34 @@ do
             break
         fi
     else
-        echo "Install home-assistant-frontend failed, exit."
+        echo -e "\033[33m Install python module home-assistant-frontend failed, exit. \033[0m"
         exit 0
     fi
 done
 #Install Home Assistant
-echo "Install HomeAssistant"
-python3 -m pip install homeassistant
-if [ $? -ne 0 ]; then
-    echo "Install homeassistant failed, exit."
-    exit 0
-fi
+try=0
+while true
+do
+    try=$((try+1))
+    if [ $try -le 5 ]; then
+        echo -e "\033[33m Install HomeAssistant...... try $try. \033[0m"
+        python3 -m pip install homeassistant
+        if [ $? -ne 0 ]; then
+            continue
+        else
+            break
+        fi
+    else
+        echo -e "\033[33m Install HomeAssistant failed, exit. \033[0m"
+        exit 0
+    fi
+done
 #Config the web ip
 echo "server_host: 192.168.8.1" >> ./.homeassistant/configuration.yaml
 echo "server_port: 8123" >> ./.homeassistant/configuration.yaml
-#Clean the installation path
-rm -rf ./.cache/
 #Add multicast router rule
-echo "Add multicast route rule"
+echo -e "\033[33m Add multicast route rules. \033[0m"
 ip route add broadcast 224.0.0.0/24 dev br-lan
 #Install finished
-echo "HomeAssistant installation finished."
+echo "HomeAssistant installation finished. Use command \"hass\" to start the HA."
+echo "Note that the firstly start will take 20~30 minutes. If failed, retry it"
