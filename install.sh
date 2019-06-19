@@ -220,7 +220,8 @@ do
     fi
 done
 #Config the homeassistant
-cp ./HomeAssistantOnOPENWRT-master/configuration.yaml ./.homeassistant/
+mkdir -p ./.homeassistant
+cp ./HomeAssistantOnOPENWRT-master/configuration/* ./.homeassistant/
 #Add multicast router rule
 echo -e "\033[33m Add multicast route rules. \033[0m"
 ip route add broadcast 224.0.0.0/24 dev br-lan

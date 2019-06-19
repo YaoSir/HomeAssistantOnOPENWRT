@@ -1,3 +1,4 @@
+
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
@@ -7,6 +8,7 @@ default_config:
 
 server_host: 192.168.8.1
 server_port: 8123
+
 # Text to speech
 tts:
   - platform: google_translate
@@ -14,4 +16,3 @@ tts:
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
-
