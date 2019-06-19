@@ -162,6 +162,7 @@ do
         echo -e "\033[33m Install python module: PyNaCl...... try $try. \033[0m"
         SODIUM_INSTALL=system pip3 install pynacl
         if [ $? -ne 0 ]; then
+            rm -rf ./.cache/
             continue
         else
             break
@@ -181,6 +182,7 @@ do
         curl https://files.pythonhosted.org/packages/07/ca/bc827c5e55918ad223d59d299fff92f3563476c3b00d0a9157d9c0217449/cryptography-2.6.1.tar.gz > cryptography-2.6.1.tar.gz
         if [ $? -ne 0 ]; then
             rm ./cryptography-2.6.1.tar.gz
+            rm -rf ./.cache/
             continue
         else
             break
@@ -210,6 +212,7 @@ do
         echo -e "\033[33m Install HomeAssistant...... try $try. \033[0m"
         python3 -m pip install homeassistant
         if [ $? -ne 0 ]; then
+            rm -rf ./.cache/
             continue
         else
             break
