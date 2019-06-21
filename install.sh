@@ -225,9 +225,6 @@ done
 #Config the homeassistant
 mkdir -p ./.homeassistant
 cp ./HomeAssistantOnOPENWRT-master/configuration/* ./.homeassistant/
-#Add multicast router rule
-echo -e "\033[33m Add multicast route rules. \033[0m"
-ip route add broadcast 224.0.0.0/24 dev br-lan
 #Install finished
 echo -e "\033[32m HomeAssistant installation finished. Use command \"hass\" to start the HA. \033[0m"
 echo -e "\033[32m Note that the firstly start will take 20~30 minutes. If failed, retry it. \033[0m"
