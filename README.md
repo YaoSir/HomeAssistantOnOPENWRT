@@ -14,6 +14,10 @@ And then get into the root path and clone this project.
 cd /root/
 git clone https://github.com/YaoSir/HomeAssistantOnOPENWRT.git
 ```
+Note that maybe you have to install git, use command like this
+```
+opkg install git git-http
+```
 ## Start installation
 Get into the project folder and start the installation. Make sure your device has connected to the Internet.
 ```
